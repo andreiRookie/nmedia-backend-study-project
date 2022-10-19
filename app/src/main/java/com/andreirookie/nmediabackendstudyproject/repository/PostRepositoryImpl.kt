@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 
 
 class PostRepositoryImpl: PostRepository {
+    // инстанс класса ОкХттпКлиент, делается через спецкласс Билдер
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .build()
@@ -19,17 +20,22 @@ class PostRepositoryImpl: PostRepository {
     private val typeToken = object : TypeToken<List<Post>>() {}
 
     companion object {
+        // ip адрес эмулятора на компе - http://10.0.2.2
         private const val BASE_URL = "http://10.0.2.2:9999"
         private val jsonType = "application/json".toMediaType()
     }
 
     override fun getAll(): List<Post> {
         val request: Request = Request.Builder()
-            .url("$BASE_URL/api/slow/posts")
+                // api/posts - адрес запроса
+                //вставка slow - задержка 5 сек для тестиррвоания методов соединения
+            //посмотреть как работает прилоожение, если медленный интернет
+            // запрос get - по умолчанию, не пишется
+            .url("${BASE_URL}/api/slow/posts")
             .build()
 
-        return client.newCall(request)
-            .execute()
+        return client.newCall(request)//ньюКолл формирует запрос
+            .execute()//запускает запрос
             .let { it.body?.string() ?: throw RuntimeException("body is null") }
             .let {
                 gson.fromJson(it, typeToken.type)
@@ -37,8 +43,27 @@ class PostRepositoryImpl: PostRepository {
     }
 
     override fun likeById(id: Long) {
-        // TODO: do this in homework
+        val request: Request = Request.Builder()
+            .post("".toRequestBody())
+            .url("$BASE_URL/api/slow/posts/$id/likes")
+            .build()
+
+        client.newCall(request)
+            .execute()
+            .close()
     }
+
+    override fun dislikeById(id: Long) {
+        val request: Request = Request.Builder()
+            .delete()
+            .url("$BASE_URL/api/slow/posts/$id/likes")
+            .build()
+
+        client.newCall(request)
+            .execute()
+            .close()
+    }
+
 
     override fun save(post: Post) {
         val request: Request = Request.Builder()

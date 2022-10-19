@@ -46,9 +46,11 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // MANIFEST PLACEHOLDERS
             manifestPlaceholders.usesCleartextTraffic = false
         }
         debug {
+            // MANIFEST PLACEHOLDERS
             manifestPlaceholders.usesCleartextTraffic = true
         }
     }

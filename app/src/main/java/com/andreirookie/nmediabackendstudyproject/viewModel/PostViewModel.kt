@@ -31,6 +31,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         get() = _postCreated
 
     init {
+    //    repository.getAll() - ошибка, т.к. на главном UIThread потоке работа с сетью и запросы в БД запрещены
         loadPosts()
     }
 
@@ -45,6 +46,12 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: IOException) {
                 // Получена ошибка
                 FeedModel(error = true)
+                // прокидываем значения в FeedModel в _data
+                //Мы используем postValue для записи в LiveData
+            // с фонового потока, т.к. этот метод выполняет
+            // доставку данных в главный поток,
+            // в то время как обычный вызов setValue(только на главном потоке)
+            // таких преобразований не делает.
             }.also(_data::postValue)
         }
     }
@@ -72,18 +79,57 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(id: Long) {
-        thread { repository.likeById(id) }
+        thread {
+            val oldPosts = _data.value?.posts.orEmpty()
+
+            _data.postValue(
+                _data.value?.copy(posts = _data.value?.posts.orEmpty()
+                    .map{
+                    if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes + 1)
+                })
+            )
+
+            try {
+                repository.likeById(id)
+            } catch (e: IOException) {
+                _data.postValue(_data.value?.copy(posts = oldPosts))
+            }
+
+        }
+    }
+
+    fun dislikeById(id: Long) {
+        thread {
+            val oldPosts = _data.value?.posts.orEmpty()
+
+            _data.postValue(
+                _data.value?.copy(posts = _data.value?.posts.orEmpty()
+                    .map{
+                    if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes - 1)
+                })
+            )
+
+            try {
+                repository.dislikeById(id)
+            } catch (e: IOException) {
+                _data.postValue(_data.value?.copy(posts = oldPosts))
+            }}
     }
 
     fun removeById(id: Long) {
         thread {
-            // Оптимистичная модель
+            // Оптимистичная модель (подразумеваем, что на сервере всё пройдет хорошо)
+
+            // сохраняем состояние постов до удаления
             val old = _data.value?.posts.orEmpty()
+
+                //моделируем удаление (для пользователя)
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
                     .filter { it.id != id }
                 )
             )
+            // на сервере удаляется в фоновом режиме(с задержкой n сек)
             try {
                 repository.removeById(id)
             } catch (e: IOException) {
