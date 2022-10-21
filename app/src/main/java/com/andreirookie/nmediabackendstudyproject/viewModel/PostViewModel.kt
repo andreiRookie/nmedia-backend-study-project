@@ -78,6 +78,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = edited.value?.copy(content = text)
     }
 
+    // Лучший подход, если к серверу единовременно
+    // обращается сразу несколько клиентов
     fun likeById(id: Long) {
         thread {
             val oldPosts = _data.value?.posts.orEmpty()
@@ -85,16 +87,18 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
                     .map{
-                    if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes + 1)
-                })
+                        if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes + 1)
+                    })
             )
 
             try {
-                repository.likeById(id)
+                val updatedPost = repository.likeById(id)
+                val currentPosts = _data.value?.posts.orEmpty()
+                    .map { if (it.id == id) updatedPost else it }
+                _data.postValue(FeedModel(posts = currentPosts, empty = currentPosts.isEmpty()))
             } catch (e: IOException) {
                 _data.postValue(_data.value?.copy(posts = oldPosts))
             }
-
         }
     }
 
@@ -105,15 +109,19 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
                     .map{
-                    if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes - 1)
-                })
+                        if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes - 1)
+                    })
             )
 
             try {
-                repository.dislikeById(id)
+                val updatedPost = repository.dislikeById(id)
+                val currentPosts = _data.value?.posts.orEmpty()
+                    .map { if (it.id == id) updatedPost else it }
+                _data.postValue(FeedModel(posts = currentPosts, empty = currentPosts.isEmpty()))
             } catch (e: IOException) {
                 _data.postValue(_data.value?.copy(posts = oldPosts))
-            }}
+            }
+        }
     }
 
     fun removeById(id: Long) {

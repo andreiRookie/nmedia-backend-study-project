@@ -42,26 +42,36 @@ class PostRepositoryImpl: PostRepository {
             }
     }
 
-    override fun likeById(id: Long) {
+    // Лучший подход, если к серверу единовременно
+    // обращается сразу несколько клиентов
+    override fun likeById(id: Long): Post {
         val request: Request = Request.Builder()
             .post("".toRequestBody())
             .url("$BASE_URL/api/slow/posts/$id/likes")
             .build()
 
-        client.newCall(request)
+        return client.newCall(request)
             .execute()
-            .close()
+            .let { it.body?.string() ?: throw RuntimeException("body is null") }
+            // можно без тайптокена,т.к. Post обычный класс,
+            // а не интерфейс/сложная коллекция
+            .let {
+                gson.fromJson(it, Post::class.java)
+            }
     }
 
-    override fun dislikeById(id: Long) {
+    override fun dislikeById(id: Long): Post {
         val request: Request = Request.Builder()
             .delete()
             .url("$BASE_URL/api/slow/posts/$id/likes")
             .build()
 
-        client.newCall(request)
+        return client.newCall(request)
             .execute()
-            .close()
+            .let { it.body?.string() ?: throw RuntimeException("body is null") }
+            .let {
+                gson.fromJson(it, Post::class.java)
+            }
     }
 
 

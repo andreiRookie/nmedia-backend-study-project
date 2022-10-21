@@ -35,7 +35,8 @@ class FeedFragment : Fragment() {
             }
 
             override fun onLike(post: Post) {
-                println("likedByMe = ${post.likedByMe}")
+            // либо переписать метод c добавлением флага ->
+            // viewModel.likeById(post.id, post.likedById)
                 if (post.likedByMe) {
                     viewModel.dislikeById(post.id)
                 } else {
