@@ -31,29 +31,29 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         get() = _postCreated
 
     init {
-    //    repository.getAll() - ошибка, т.к. на главном UIThread потоке работа с сетью и запросы в БД запрещены
         loadPosts()
     }
 
     fun loadPosts() {
-        thread {
-            // Начинаем загрузку
-            _data.postValue(FeedModel(loading = true))
-            try {
-                // Данные успешно получены
-                val posts = repository.getAll()
-                FeedModel(posts = posts, empty = posts.isEmpty())
-            } catch (e: IOException) {
-                // Получена ошибка
-                FeedModel(error = true)
-                // прокидываем значения в FeedModel в _data
-                //Мы используем postValue для записи в LiveData
-            // с фонового потока, т.к. этот метод выполняет
-            // доставку данных в главный поток,
-            // в то время как обычный вызов setValue(только на главном потоке)
-            // таких преобразований не делает.
-            }.also(_data::postValue)
-        }
+        // Начинаем загрузку
+        _data.postValue(FeedModel(loading = true))
+
+        repository.getAllAsync(object : PostRepository.GetAllPostsCallback {
+            override fun onSuccess(posts: List<Post>) {
+                _data.postValue(FeedModel(posts = posts, empty = posts.isEmpty()))
+            }
+
+            override fun onError(e: Exception) {
+                _data.postValue(FeedModel(error = true))
+            }
+
+        })
+        // прокидываем значения в FeedModel в _data
+        //Мы используем postValue для записи в LiveData
+        // с фонового потока, т.к. этот метод выполняет
+        // доставку данных в главный поток,
+        // в то время как обычный вызов setValue(только на главном потоке)
+        // таких преобразований не делает.
     }
 
     fun save() {
@@ -86,8 +86,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
-                    .map{
-                        if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes + 1)
+                    .map {
+                        if (it.id != id) it else it.copy(
+                            likedByMe = !it.likedByMe,
+                            likes = it.likes + 1
+                        )
                     })
             )
 
@@ -108,8 +111,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
-                    .map{
-                        if (it.id != id) it else it.copy(likedByMe = !it.likedByMe, likes = it.likes - 1)
+                    .map {
+                        if (it.id != id) it else it.copy(
+                            likedByMe = !it.likedByMe,
+                            likes = it.likes - 1
+                        )
                     })
             )
 
@@ -131,7 +137,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             // сохраняем состояние постов до удаления
             val old = _data.value?.posts.orEmpty()
 
-                //моделируем удаление (для пользователя)
+            //моделируем удаление (для пользователя)
             _data.postValue(
                 _data.value?.copy(posts = _data.value?.posts.orEmpty()
                     .filter { it.id != id }

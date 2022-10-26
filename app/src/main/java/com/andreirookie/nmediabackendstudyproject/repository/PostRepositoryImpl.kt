@@ -4,14 +4,14 @@ package com.andreirookie.nmediabackendstudyproject.repository
 import com.andreirookie.nmediabackendstudyproject.dto.Post
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
-class PostRepositoryImpl: PostRepository {
+class PostRepositoryImpl : PostRepository {
     // инстанс класса ОкХттпКлиент, делается через спецкласс Билдер
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -25,21 +25,30 @@ class PostRepositoryImpl: PostRepository {
         private val jsonType = "application/json".toMediaType()
     }
 
-    override fun getAll(): List<Post> {
+    override fun getAllAsync(callback: PostRepository.GetAllPostsCallback) {
         val request: Request = Request.Builder()
-                // api/posts - адрес запроса
-                //вставка slow - задержка 5 сек для тестиррвоания методов соединения
+            // api/posts - адрес запроса
+            //вставка slow - задержка 5 сек для тестиррвоания методов соединения
             //посмотреть как работает прилоожение, если медленный интернет
             // запрос get - по умолчанию, не пишется
             .url("${BASE_URL}/api/slow/posts")
             .build()
 
-        return client.newCall(request)//ньюКолл формирует запрос
-            .execute()//запускает запрос
-            .let { it.body?.string() ?: throw RuntimeException("body is null") }
-            .let {
-                gson.fromJson(it, typeToken.type)
-            }
+        client.newCall(request)//ньюКолл формирует запрос
+            .enqueue(object : Callback { // добавляем запрос в очередь
+                override fun onResponse(call: Call, response: Response) {
+                    try {
+                        val responseBody =
+                            response.body?.string() ?: throw RuntimeException("body is null")
+                        callback.onSuccess(gson.fromJson(responseBody, typeToken.type))
+                    } catch (e: Exception) {
+                        callback.onError(e)
+                    }
+                }
+                override fun onFailure(call: Call, e: IOException) {
+                    callback.onError(e)
+                }
+            })
     }
 
     // Лучший подход, если к серверу единовременно
