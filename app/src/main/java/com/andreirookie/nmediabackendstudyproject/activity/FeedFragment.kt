@@ -9,7 +9,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.andreirookie.nmediabackendstudyproject.adapter.OnInteractionListener
 import com.andreirookie.nmediabackendstudyproject.adapter.PostsAdapter
 import com.andreirookie.nmediabackendstudyproject.dto.Post

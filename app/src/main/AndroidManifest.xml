@@ -15,7 +15,7 @@
         android:usesCleartextTraffic="${usesCleartextTraffic}">
 
         <activity
-            android:name="com.andreirookie.nmediabackendstudyproject.activity.AppActivity"
+            android:name="com.andreirookie.nmediabackendstudyproject.activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
