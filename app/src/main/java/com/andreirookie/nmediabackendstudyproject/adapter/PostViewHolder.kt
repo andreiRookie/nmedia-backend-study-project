@@ -53,10 +53,13 @@ class PostViewHolder(
             // avatars
             val avatarsUrl = "http://10.0.2.2:9999/avatars/"
 
+            val rounding = RoundedCorners(100)
+            
             Glide.with(binding.avatar)
                 .load("$avatarsUrl${post.authorAvatar}")
                 .placeholder(R.drawable.ic_loading_100dp)
                 .error(R.drawable.ic_error_100dp)
+                .transform(rounding)
                 .timeout(10_000)
                 .into(binding.avatar)
         }
