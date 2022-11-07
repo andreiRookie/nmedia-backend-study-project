@@ -10,6 +10,7 @@ import androidx.core.os.bundleOf
 import com.andreirookie.nmediabackendstudyproject.R
 import com.andreirookie.nmediabackendstudyproject.databinding.ActivityMainBinding
 import com.bumptech.glide.Glide
+import com.squareup.picasso.Picasso
 import okhttp3.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -40,15 +41,24 @@ class MainActivity : AppCompatActivity() {
             val url = "http://10.0.2.2:9999/avatars/${urls[index++]}"
             println("Loading: $url")
 
+            Picasso.get()
+                .load(url)
+                    // vector placeholders not supported
+                .placeholder(R.drawable.ic_loading_100dp)
+                .error(R.drawable.ic_error_100dp)
+                .into(binding.image)
+
+
+
             //указываем Context, с которым работаем
           //  Glide.with(binding.image) - из view сам вытащит контекст
-            Glide.with(this)
-                .load(url) // передаем адрес картинки
-                .placeholder(R.drawable.ic_loading_100dp) //пикча в момент загрузки
-                .error(R.drawable.ic_error_100dp)
-                // glide по умолчанию не ждёт, поэтому нужно прописать timeout
-                .timeout(10_000)
-                .into(binding.image)
+//            Glide.with(this)
+//                .load(url) // передаем адрес картинки
+//                .placeholder(R.drawable.ic_loading_100dp) //пикча в момент загрузки
+//                .error(R.drawable.ic_error_100dp)
+//                // glide по умолчанию не ждёт, поэтому нужно прописать timeout
+//                .timeout(10_000)
+//                .into(binding.image)
 
                 //картинки кешируются
 
