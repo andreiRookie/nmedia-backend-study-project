@@ -1,7 +1,9 @@
 package com.andreirookie.nmediabackendstudyproject.repository
 
 
+import android.content.Context
 import com.andreirookie.nmediabackendstudyproject.dto.Post
+import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.*

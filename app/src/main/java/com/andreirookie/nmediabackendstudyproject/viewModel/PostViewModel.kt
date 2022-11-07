@@ -11,10 +11,11 @@ import com.andreirookie.nmediabackendstudyproject.util.SingleLiveEvent
 private val empty = Post(
     id = 0,
     content = "",
-    author = "",
+    author = "Username",
     likedByMe = false,
     likes = 0,
-    published = ""
+    published = "",
+    authorAvatar = ""
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
