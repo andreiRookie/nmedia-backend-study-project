@@ -2,6 +2,7 @@ package com.andreirookie.nmediabackendstudyproject.api
 
 import com.andreirookie.nmediabackendstudyproject.BuildConfig
 import com.andreirookie.nmediabackendstudyproject.dto.Post
+import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -10,11 +11,22 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 import retrofit2.http.*
 
-private const val BASE_URL = "http://10.0.2.2:9999/api/"
+private const val BASE_URL = "${BuildConfig.BASE_URL}/api/"
+
+private val loggingInterceptor = HttpLoggingInterceptor().apply {
+    if (BuildConfig.DEBUG) {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+}
+
+private val okHttpClient = OkHttpClient.Builder()
+    .addInterceptor(loggingInterceptor)
+    .build()
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(GsonConverterFactory.create()) // //converter-gson
     .baseUrl(BASE_URL)
+    .client(okHttpClient)
     .build()
 
 interface PostsApiService {

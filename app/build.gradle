@@ -48,10 +48,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // MANIFEST PLACEHOLDERS
             manifestPlaceholders.usesCleartextTraffic = false
+            buildConfigField "String", "BASE_URL", '"http://nmadia.herokuapp.com"'
         }
         debug {
             // MANIFEST PLACEHOLDERS
             manifestPlaceholders.usesCleartextTraffic = true
+            buildConfigField "String", "BASE_URL", '"http://10.0.2.2:9999"'
+
         }
     }
 }
@@ -101,6 +104,7 @@ dependencies {
 
     implementation "com.squareup.retrofit2:retrofit:2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_version"
 
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
